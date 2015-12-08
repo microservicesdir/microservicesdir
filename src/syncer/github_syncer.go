@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"sync"
@@ -9,6 +10,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/google/go-github/github"
 )
+
+//Project defines a git based project.
+type Project struct {
+	name   string
+	gitURL string
+}
 
 var (
 	wg sync.WaitGroup
@@ -21,16 +28,13 @@ var (
 )
 
 func main() {
-
 	flag.Parse()
 
-	log.Info("Creating target folder: " + *target)
+	log.Infof("Creating target folder: %v", *target)
 
 	err := os.MkdirAll(*target, os.FileMode(0777))
 	if err != nil {
-		log.Info("Could not create the target folder " + *target)
-		log.Error(err)
-		panic("Exiting")
+		log.Fatalf("Could not create the target folder %v: %v", *target, err)
 	}
 
 	client := github.NewClient(nil)
@@ -39,63 +43,69 @@ func main() {
 	repos, _, err := client.Repositories.ListByOrg(*organization, opt)
 
 	if err != nil {
-		log.Info("Could not get the list of repositories for the organization " + *organization)
+		log.Infof("Could not get the list of repositories for the organization %v", *organization)
 		log.Error(err)
-	} else if len(repos) == 0 {
-		log.Info("No repositories found for organization: " + *organization)
+	}
+
+	if len(repos) == 0 {
+		log.Infof("No repositories found for organization: %v", *organization)
 		os.Exit(0)
 	}
 
 	for _, r := range repos {
 		wg.Add(1)
-		go syncRepository(*r.Name, *r.GitURL)
+		go syncRepository(Project{
+			name:   *r.Name,
+			gitURL: *r.GitURL,
+		})
 	}
 
 	wg.Wait()
 }
 
-func syncRepository(name string, gitURL string) {
-	_, err := os.Stat(projectRootDir(name))
+func syncRepository(project Project) {
+	_, err := os.Stat(project.rootDir())
 	if err == nil {
-		updateProject(name)
+		updateProject(project)
 	} else if os.IsNotExist(err) {
-		cloneProject(name, gitURL)
+		cloneProject(project)
 	}
 }
 
-func updateProject(name string) {
+func updateProject(project Project) {
 	defer wg.Done()
 
-	log.Info("About to update project " + name)
+	log.Infof("About to update project %v", project.name)
 	cmd := exec.Command("git", "fetch", "origin")
-	cmd.Dir = projectRootDir(name)
+	cmd.Dir = project.rootDir()
 	err := cmd.Run()
 
 	if err != nil {
-		log.Info("Couldn't update the repository " + name)
+		log.Infof("Couldn't update the repository %v", project.name)
 		log.Error(err)
-	} else {
-		cmd := exec.Command("git", "reset", "--hard", "origin/master")
-		cmd.Dir = projectRootDir(name)
-		_ = cmd.Run()
-
-		log.Info("Project " + name + " updated")
+		return
 	}
+
+	cmd = exec.Command("git", "reset", "--hard", "origin/master")
+	cmd.Dir = project.rootDir()
+	_ = cmd.Run()
+
+	log.Infof("Project %v updated", project.name)
 }
 
-func cloneProject(name string, gitURL string) {
+func cloneProject(project Project) {
 	defer wg.Done()
 
-	log.Info("About to clone " + gitURL + " in  " + projectRootDir(name))
-	args := []string{"clone", gitURL, projectRootDir(name)}
+	log.Infof("About to clone %v in %v", project.gitURL, project.rootDir())
+	args := []string{"clone", project.gitURL, project.rootDir()}
 
 	err := exec.Command("git", args...).Run()
 	if err != nil {
-		log.Info("Couldn't checkout the repository " + name)
+		log.Errorf("Couldn't checkout the repository %v", project.name)
 		log.Error(err)
 	}
 }
 
-func projectRootDir(projectName string) string {
-	return *target + "/" + projectName
+func (p Project) rootDir() string {
+	return fmt.Sprintf("%v/%v", target, p.name)
 }
