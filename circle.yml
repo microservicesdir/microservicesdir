@@ -1,0 +1,16 @@
+## Customize the test machine
+machine:
+  timezone:
+    Europe/Berlin # Set the timezone
+
+  # Version of golang to use
+  golang:
+    version:
+      1.5
+## Customize test commands
+test:
+  pre:
+    # installs gb
+    -  go get -v -u github.com/constabulary/gb/...
+  override:
+    - make test
