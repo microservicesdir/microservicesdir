@@ -1,4 +1,4 @@
-package main
+package syncer
 
 import (
 	"flag"
@@ -13,13 +13,13 @@ import (
 
 //Project defines a git based project
 type Project struct {
-	name   string
-	gitURL string
+	Name   string
+	GitURL string
 }
 
 var (
 	organization = flag.String("organization", "microservicesdir",
-		"The name of the organization you want to sync ex: github")
+		"The Name of the organization you want to sync ex: github")
 	typesOfRepos = flag.String("types", "all",
 		"Type of Repositories you want to sync. [all, public, private]")
 	target = flag.String("target", "target/repos", "Directory to store synced repos. [target/repos]")
@@ -35,6 +35,15 @@ func createTargetDirectory(targetDirectory string) error {
 
 	return err
 }
+
+// CreateProjectFromCheckout initializes a project based on an existing checkout
+func CreateProjectFromCheckout(name string) Project {
+	return Project{
+		Name:   name,
+		GitURL: name,
+	}
+}
+
 func main() {
 	var wg sync.WaitGroup
 	flag.Parse()
@@ -50,8 +59,7 @@ func main() {
 	repos, _, err := client.Repositories.ListByOrg(*organization, opt)
 
 	if err != nil {
-		log.Infof("Could not get the list of repositories for the organization %v", *organization)
-		log.Error(err)
+		log.Errorf("Could not get the list of repositories for the organization %v. Error: %v", *organization, err)
 	}
 
 	if len(repos) == 0 {
@@ -64,20 +72,19 @@ func main() {
 
 	for _, r := range repos {
 		var project = Project{
-			name:   *r.Name,
-			gitURL: *r.GitURL,
+			Name:   *r.Name,
+			GitURL: *r.GitURL,
 		}
 
 		go project.sync(&wg, errorsChannel)
 	}
 
-	select {
-	case err := <-errorsChannel:
+	for err := range errorsChannel {
 		log.Error(err)
-	default:
 	}
 
 	wg.Wait()
+
 }
 
 func (p Project) sync(wg *sync.WaitGroup, errors chan error) {
@@ -88,10 +95,14 @@ func (p Project) sync(wg *sync.WaitGroup, errors chan error) {
 	}
 
 	if isCheckedOut {
-		errors <- p.update(wg)
+		if err := p.update(wg); err != nil {
+			errors <- err
+		}
 	}
 
-	errors <- p.clone(wg)
+	if err := p.clone(wg); err != nil {
+		errors <- err
+	}
 }
 
 func (p Project) isAlreadyCheckedOut() (val bool, err error) {
@@ -114,7 +125,7 @@ func (p Project) update(wg *sync.WaitGroup) error {
 	err := cmd.Run()
 
 	if err != nil {
-		return fmt.Errorf("Couldn't update the repository %v: %v", p.name, err.Error())
+		return fmt.Errorf("Couldn't update the repository %v: %v", p.Name, err.Error())
 	}
 
 	cmd = exec.Command("git", "reset", "--hard", "origin/master")
@@ -124,27 +135,27 @@ func (p Project) update(wg *sync.WaitGroup) error {
 		return fmt.Errorf("Could not reset the project %v", err)
 	}
 
-	log.Infof("Project %v updated", p.name)
+	log.Infof("Project %v updated", p.Name)
 	return nil
 }
 
 func (p Project) clone(wg *sync.WaitGroup) error {
 	defer wg.Done()
 
-	args := []string{"clone", p.gitURL, p.rootDir()}
+	args := []string{"clone", p.GitURL, p.rootDir()}
 
 	err := exec.Command("git", args...).Run()
 	if err != nil {
-		log.Errorf("Couldn't checkout the repository %v", p.name)
+		log.Errorf("Couldn't checkout the repository %v", p.Name)
 		log.Error(err)
 		return err
 	}
 
-	log.Infof("Project %v was successfully cloned in %v", p.gitURL, p.rootDir())
+	log.Infof("Project %v was successfully cloned in %v", p.GitURL, p.rootDir())
 
 	return nil
 }
 
 func (p Project) rootDir() string {
-	return fmt.Sprintf("%v/%v", *target, p.name)
+	return fmt.Sprintf("%v/%v", *target, p.Name)
 }

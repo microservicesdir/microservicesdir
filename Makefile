@@ -1,2 +1,5 @@
 build:
-		gb build all
+	gb build all
+
+test:
+	gb test -v 
