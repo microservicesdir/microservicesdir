@@ -28,3 +28,5 @@ bin
 pkg
 # project specific
 target
+
+prepare-db

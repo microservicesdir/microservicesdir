@@ -10,9 +10,12 @@ import (
 
 //Project defines a git based project
 type Project struct {
-	GitURL    string
-	Name      string
+	ID        int    `sql:id`
+	GitURL    string `sql:"gitUrl"`
+	Name      string `sql:"name"`
 	TargetDir string
+	Owner     string `sql:"owner"`
+	Language  string `sql:"language"`
 }
 
 // IsAlreadyCheckedOut returns true if the project is already checked and false otherwise
