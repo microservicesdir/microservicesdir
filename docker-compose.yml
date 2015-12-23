@@ -1,0 +1,12 @@
+db:
+  restart: always
+  image: mysql/mysql-server
+  volumes:
+    - ./target/mysql:/var/lib/mysql
+  net: host
+  ports:
+    - "3306:3306"
+  environment:
+    - MYSQL_ROOT_PASSWORD=root
+    - MYSQL_USER=msvcdir
+    - MYSQL_PASSWORD=msvcdir

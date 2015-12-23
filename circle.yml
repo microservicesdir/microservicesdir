@@ -1,0 +1,17 @@
+dependencies:
+  pre:
+    - sudo service mysql stop
+    - sudo service redis-server stop
+    - sudo service postgresql stop
+    - sudo service mongodb stop
+    - sudo service couchdb stop
+
+machine:
+  services:
+    - docker
+
+test:
+  pre:
+    -  go get -v -u github.com/constabulary/gb/...
+  override:
+    - make test
