@@ -3,7 +3,6 @@ package main
 import (
 	"api"
 	"core"
-	"fmt"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
@@ -12,13 +11,15 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	p := core.Project{}
-	mux.Handle("/projects", api.HomeHandler(&p))
+	db, err := core.CreateDatabaseConnection("msvcdir", "msvcdir", "microservicesdirtest")
 
-	log.Info(p.GetAllProjects())
-	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "Welcome to the home page!")
-	})
+	if err != nil {
+		log.Fatalf("Could not connect to the database. Error was %v", err)
+	}
+
+	projectRepository := core.ProjectRepository{db}
+
+	mux.Handle("/projects", api.HomeHandler(&projectRepository))
 
 	n := negroni.Classic()
 	n.UseHandler(mux)

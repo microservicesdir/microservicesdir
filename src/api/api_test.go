@@ -1,7 +1,6 @@
-package api_test
+package api
 
 import (
-	"api"
 	"core"
 	"encoding/json"
 	"io/ioutil"
@@ -32,7 +31,7 @@ func returnProjects() []core.Project {
 }
 
 func TestReturnsAllProjectsAsJson(t *testing.T) {
-	homeHandle := api.HomeHandler(mockDatabase)
+	homeHandle := HomeHandler(mockDatabase)
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 	homeHandle.ServeHTTP(w, req)

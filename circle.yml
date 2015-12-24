@@ -14,4 +14,5 @@ test:
   pre:
     -  go get -v -u github.com/constabulary/gb/...
   override:
+    - make prepare-db
     - make test

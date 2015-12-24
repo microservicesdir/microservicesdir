@@ -1,10 +1,13 @@
-build:
+build: clean
 	gb build all
 
-test: dev prepare-db
+clean:
+	rm -rf bin
+
+test: dev
 	gb test -v
 
-prepare-db:
+prepare-db: dev
 	scripts/setup_db.sh
 	touch $@
 
