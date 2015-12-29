@@ -12,15 +12,17 @@ type OrganizationSyncer struct {
 	Organization string
 }
 
-// SyncProjects sync all the organization projects with
+// SyncProjects sync all the organization projects with the local state
 func (g *OrganizationSyncer) SyncProjects(rc RepositoriesClient) ([]core.Project, error) {
+	// TODO: Github OAuth authentication to support private projects
+
 	var projects []core.Project
 
 	repos, err := rc.ListRepositories(g.Organization, "all")
 	if err != nil {
 		return nil, err
 	}
-
+	// TODO: persist the manifest information somewhere and update in case is newer.
 	for _, v := range repos {
 		manifest, err := rc.GetManifest("microservicesdir", "microservicesdir")
 		if err != nil {
@@ -28,14 +30,12 @@ func (g *OrganizationSyncer) SyncProjects(rc RepositoriesClient) ([]core.Project
 		}
 
 		log.Infof("%v", manifest)
+		project := core.Project{
+			Name: v.Name,
+		}
 
-		projects = append(projects, core.Project{
-			Name: v,
-		})
+		projects = append(projects, project)
 	}
 
-	// Sync their state in the database.
-	//https://github.com/microservicesdir/microservicesdir/blob/master/Makefile
-	//https://raw.githubusercontent.com/microservicesdir/microservicesdir/master/Makefile
 	return projects, err
 }

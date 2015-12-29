@@ -12,6 +12,13 @@ type Manifest struct {
 	Language string `yaml:"language"`
 }
 
+// A Repository contains all of the project files and an entry to where they are
+// persisted.
+type Repository struct {
+	Name   string `json:"name"`
+	GitURL string `json:"gitURL"`
+}
+
 // Project is a part of the organization's inventory of services.
 type Project struct {
 	Name     string `json:"name"`

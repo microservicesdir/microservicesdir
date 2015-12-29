@@ -3,26 +3,41 @@ package syncer
 import (
 	"core"
 	"testing"
-
-	"gopkg.in/yaml.v2"
 )
+
+type fakeRepositoryManager struct{}
+
+func (frm *fakeRepositoryManager) SaveProject(project core.Project, manifest core.Manifest) (core.Project, error) {
+	return core.Project{}, nil
+}
 
 type fakeRepositoriesClient struct{}
 
-func (frc *fakeRepositoriesClient) ListRepositories(organization string, types string) ([]string, error) {
-	return []string{"microservicesdir", types}, nil
+func (frc *fakeRepositoriesClient) ListRepositories(organization string, types string) ([]core.Repository, error) {
+	var repositories []core.Repository
+	repository := core.Repository{
+		Name:   "microservicesdir",
+		GitURL: "git@github.com:microservicesdir/microservicesdir.git",
+	}
+	return append(repositories, repository), nil
 }
 
 func (frc *fakeRepositoriesClient) GetManifest(owner string, repositoryName string) (core.Manifest, error) {
-	manifestStr := `
-name: ExampleProject
-owner: developer-team@example.com
-language: go
-`
-	var manifest core.Manifest
-	err := yaml.Unmarshal([]byte(manifestStr), &manifest)
+	return core.Manifest{
+		Name:     "microservicesdir",
+		Owner:    "vitorp@gmail.com",
+		Language: "go",
+	}, nil
+}
 
-	return manifest, err
+func TestCanParseManifest(t *testing.T) {
+	fakeClient := fakeRepositoriesClient{}
+
+	manifest, _ := fakeClient.GetManifest("microservicesdir", "microservicesdir")
+
+	if manifest.Name != "microservicesdir" {
+		t.Fatalf("cannot parse manifest. want %v got %v", "microservicesdir", manifest.Name)
+	}
 }
 
 func TestCanRetrieveAllProjectsFromGithub(t *testing.T) {
