@@ -5,6 +5,13 @@ import (
 	"log"
 )
 
+// Manifest stores meta information about the project
+type Manifest struct {
+	Name     string `yaml:"name"`
+	Owner    string `yaml:"owner"`
+	Language string `yaml:"language"`
+}
+
 // Project is a part of the organization's inventory of services.
 type Project struct {
 	Name     string `json:"name"`
