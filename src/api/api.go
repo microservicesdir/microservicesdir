@@ -1,9 +1,9 @@
 package api
 
 import (
-	"core"
 	"encoding/json"
 	"net/http"
+	"core"
 )
 
 // MicroServicesDirectoryDatabase is a DAO containing all operations
@@ -17,7 +17,7 @@ type MicroServicesDirectoryDatabase interface {
 func HomeHandler(db MicroServicesDirectoryDatabase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		projects, _ := json.Marshal(db.GetAllProjects())
-
+		fmt.Printf("O")
 		w.Write(projects)
 	})
 }

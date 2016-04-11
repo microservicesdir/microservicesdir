@@ -10,7 +10,7 @@ import (
 
 func TestManifestParsing(t *testing.T) {
 	githubClient := github.NewClient(nil)
-	repositoriesClient := syncer.GithubRepositoryClient{*githubClient}
+	repositoriesClient := syncer.GithubRepositoryClient{githubClient}
 
 	manifest, err := repositoriesClient.GetManifest("microservicesdir", "microservicesdir")
 
@@ -33,7 +33,7 @@ func TestManifestParsing(t *testing.T) {
 
 func TestNoAvailableManifestShouldBeBlank(t *testing.T) {
 	githubClient := github.NewClient(nil)
-	repositoriesClient := syncer.GithubRepositoryClient{*githubClient}
+	repositoriesClient := syncer.GithubRepositoryClient{githubClient}
 
 	manifest, _ := repositoriesClient.GetManifest("microservicesdir", "inexistingproject")
 	var blankManifest core.Manifest

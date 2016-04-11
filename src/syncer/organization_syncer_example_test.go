@@ -1,19 +1,34 @@
 package syncer_test
 
 import (
+	"net/http"
 	"syncer"
 	"testing"
 
+	"github.com/dnaeon/go-vcr/recorder"
 	"github.com/google/go-github/github"
 )
 
-func _TestIntegrationSyncProjects(t *testing.T) {
+func TestIntegrationSyncProjects(t *testing.T) {
+
+	r, err := recorder.New("../../testdata/githubapi")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Stop()
+
+	client := &http.Client{
+		Transport: r.Transport,
+	}
+
+	// TODO: Convert this into a example that can be attached to godocs
 	o := syncer.OrganizationSyncer{
 		Organization: "microservicesdir",
 	}
 
-	githubClient := github.NewClient(nil)
-	repositoriesClient := syncer.GithubRepositoryClient{*githubClient}
+	githubClient := github.NewClient(client)
+	repositoriesClient := syncer.GithubRepositoryClient{githubClient}
 
 	projects, err := o.SyncProjects(&repositoriesClient)
 

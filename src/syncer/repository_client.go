@@ -13,7 +13,7 @@ import (
 
 // GithubRepositoryClient is an implementation of a Repository Client for github
 type GithubRepositoryClient struct {
-	github.Client
+	*github.Client
 }
 
 // RepositoriesClient defines a client that knows how to interact with

@@ -14,6 +14,19 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/dnaeon/go-vcr",
+			"repository": "https://github.com/dnaeon/go-vcr",
+			"revision": "e1157de87c9dc1ec11e1fac732d108b8bdbf6d79",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/dnaeon/go-vcr/recorder",
+			"repository": "https://github.com/dnaeon/go-vcr",
+			"revision": "e1157de87c9dc1ec11e1fac732d108b8bdbf6d79",
+			"branch": "master",
+			"path": "/recorder"
+		},
+		{
 			"importpath": "github.com/go-sql-driver/mysql",
 			"repository": "https://github.com/go-sql-driver/mysql",
 			"revision": "d512f204a577a4ab037a1816604c48c9c13210be",

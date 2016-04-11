@@ -1,5 +1,6 @@
 dependencies:
   pre:
+    # Guarantees that no services other than docker are running on this machine
     - sudo service mysql stop
     - sudo service redis-server stop
     - sudo service postgresql stop
@@ -9,7 +10,6 @@ dependencies:
 machine:
   services:
     - docker
-
 test:
   pre:
     -  go get -v -u github.com/constabulary/gb/...
